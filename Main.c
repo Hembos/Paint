@@ -5,7 +5,7 @@ ERASER Eraser;
 MyLINE line;
 int Tools = 0;
 int Click = 0;
-int k = 0;
+BOOL SavePressed = 0;
 BOOL FileCreated;
 char FileName[200];
 
@@ -95,7 +95,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			if (lParam == (LPARAM)Buttons.hBtnSave)
 			{
-				k = 1;
+				SavePressed = 1;
 				InvalidateRect(hWnd, NULL, FALSE);
 			}
 		}
@@ -193,10 +193,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			LineDraw(line, hdc);
 		}
 
-		if (k == 1)
+		if (SavePressed == 1)
 		{
 			Save(hdc, FileName);
-			k = 0;
+			SavePressed = 0;
 		}
 		if (FileCreated == Opened)
 		{
@@ -206,7 +206,5 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		EndPaint(hWnd, &ps);
 	}
 	}
-	return DefWindowProc(hWnd, msg, wParam, lParam);
-}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
