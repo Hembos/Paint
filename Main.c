@@ -2,23 +2,15 @@
 
 PENCIL Pencil;
 ERASER Eraser;
+MyLINE line;
 int Tools = 0;
 int Click = 0;
 int k = 0;
 BOOL FileCreated;
 char FileName[200];
-PENSILCOLOR hEditColor;
 
+BUTTONS Buttons;
 HWND hWnd;
-HWND hBtnPencil;
-HWND hBtnEraser;
-HWND hEditThicknessPencil;
-HWND hEditThicknessEraser;
-HWND hBtnSave;
-HWND hBtnNew;
-HWND hBtnOpen;
-HWND hEditFileName;
-
 HINSTANCE hInstance;
 HDC hdc;
 PAINTSTRUCT ps;
@@ -55,8 +47,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	return msg.wParam;
 }
 
-
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -68,15 +58,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_COMMAND:
 	{
-		if (lParam == (LPARAM)hBtnNew)
+		if (lParam == (LPARAM)Buttons.hBtnNew)
 		{
-			GetWindowText(hEditFileName, FileName, 200);
+			GetWindowText(Buttons.hEditFileName, FileName, 200);
 			FileCreated = Created;
 			break;
 		}
-		if (lParam == (LPARAM)hBtnOpen)
+		if (lParam == (LPARAM)Buttons.hBtnOpen)
 		{
-			GetWindowText(hEditFileName, FileName, 200);
+			GetWindowText(Buttons.hEditFileName, FileName, 200);
 			FileCreated = Opened;
 			InvalidateRect(hWnd, NULL, FALSE);
 			break;
@@ -87,68 +77,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		if (FileCreated != 0)
 		{
-			if (lParam == (LPARAM)hBtnPencil)
+			if (lParam == (LPARAM)Buttons.hBtnPencil)
 			{
-				Pencil = PencilDraw(Pencil, hEditThicknessPencil, hEditColor);
+				Pencil = PencilDescription(Pencil, Buttons.hEditThicknessPencil, Buttons.hEditColor);
 				Tools = PencilTool;
 			}
-			if (lParam == (LPARAM)hBtnEraser)
+			if (lParam == (LPARAM)Buttons.hBtnLine)
 			{
-				char Er[10];
-				GetWindowText(hEditThicknessEraser, Er, 5);
-				Tools = EraserTool;
-				Eraser.Thickness = atoi(Er);
+				line.Click = 0;
+				line = LineDescription(line, Buttons.hEditThicknessLine, Buttons.hEditColor);
+				Tools = Line;
 			}
-			if (lParam == (LPARAM)hBtnSave)
+			if (lParam == (LPARAM)Buttons.hBtnEraser)
+			{
+				Eraser = EraserDescription(Eraser, Buttons.hEditThicknessEraser);
+				Tools = EraserTool;
+			}
+			if (lParam == (LPARAM)Buttons.hBtnSave)
 			{
 				k = 1;
 				InvalidateRect(hWnd, NULL, FALSE);
 			}
 		}
-		
-		
 		break;
 	}
 	case WM_CREATE:
 	{
-		///////////////////////Pencil
-		hBtnPencil = CreateWindow("button", "Pencil",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
-			10, 10, 120, 30, hWnd, 0, hInstance, NULL);
-		hEditThicknessPencil = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 10, 50, 50, 20, hWnd, NULL, hInstance, 0);
-		ShowWindow(hBtnPencil, SW_SHOWNORMAL);
-		////////////////////////////////////
-
-		///////////////////////Eraser
-		hBtnEraser = CreateWindow("button", "Eraser",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
-			130, 10, 120, 30, hWnd, 0, hInstance, NULL);
-		hEditThicknessEraser = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 130, 50, 50, 20, hWnd, NULL, hInstance, 0);
-		ShowWindow(hBtnEraser, SW_SHOWNORMAL);
-		///////////////////////////////////
-
-		//////////////////////Color
-		hEditColor.hEditR = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 270, 20, 50, 20, hWnd, NULL, hInstance, 0);
-		ShowWindow(hEditColor.hEditR, SW_SHOWNORMAL);
-		hEditColor.hEditG = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 320, 20, 50, 20, hWnd, NULL, hInstance, 0);
-		ShowWindow(hEditColor.hEditG, SW_SHOWNORMAL);
-		hEditColor.hEditB = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 370, 20, 50, 20, hWnd, NULL, hInstance, 0);
-		ShowWindow(hEditColor.hEditB, SW_SHOWNORMAL);
-		//////////////////////////////////
-
-		/////////////////////Save Open New
-		hBtnSave = CreateWindow("button", "Save",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
-			450, 10, 120, 30, hWnd, 0, hInstance, NULL);
-		hBtnOpen = CreateWindow("button", "Open",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
-			570, 10, 120, 30, hWnd, 0, hInstance, NULL);
-		hBtnNew = CreateWindow("button", "New",
-			WS_CHILD | WS_VISIBLE | WS_BORDER,
-			690, 10, 120, 30, hWnd, 0, hInstance, NULL);
-		hEditFileName = CreateWindow("Edit", NULL, WS_EX_CLIENTEDGE | WS_BORDER | WS_CHILD | WS_VISIBLE, 450, 50, 420, 20, hWnd, NULL, hInstance, 0);
-		////////////////////////////////////
-
+		Buttons = CreateButtons(Buttons, hWnd, hInstance);
 		break;
 	}
 	case WM_LBUTTONDOWN:
@@ -165,6 +120,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			Eraser.Position.y = HIWORD(lParam);
 			Eraser.State = TRUE;
 		}
+		if (Tools == Line)
+		{
+			line.Click++;
+			if (line.Click == 1)
+			{
+				line.StartPosition.x = LOWORD(lParam);
+				line.StartPosition.y = HIWORD(lParam);
+			}
+			if (line.Click == 2)
+			{
+				line.EndPosition.x = LOWORD(lParam);
+				line.EndPosition.y = HIWORD(lParam);
+				InvalidateRect(hWnd, NULL, FALSE);
+			}
+			line.State = TRUE;
+		}
 		break;
 	}
 	case WM_LBUTTONUP:
@@ -176,6 +147,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (Tools == EraserTool)
 		{
 			Eraser.State = FALSE;
+		}
+		if (Tools == Line && line.Click == 2)
+		{
+			line.Click = 0;
+			line.State = FALSE;
 		}
 		break;
 	}
@@ -206,19 +182,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if (Tools == PencilTool && Pencil.State == TRUE)
 		{
-			hPen = CreatePen(PS_SOLID, Pencil.Thickness, RGB(Pencil.Color.R, Pencil.Color.G, Pencil.Color.B));
-			SelectObject(hdc, hPen);
-			MoveToEx(hdc, Pencil.OldPosition.x, Pencil.OldPosition.y, NULL);
-			LineTo(hdc, Pencil.Position.x, Pencil.Position.y);
-			DeleteObject(hPen);
+			PencilDraw(Pencil, hdc);
 		}
 		if (Tools == EraserTool && Eraser.State == TRUE)
 		{
-			hPen = CreatePen(PS_SOLID, Eraser.Thickness, RGB(255, 255, 255));
-			SelectObject(hdc, hPen);
-			MoveToEx(hdc, Eraser.OldPosition.x, Eraser.OldPosition.y, NULL);
-			LineTo(hdc, Eraser.Position.x, Eraser.Position.y);
-			DeleteObject(hPen);
+			EraserDraw(Eraser, hdc);
+		}
+		if (Tools == Line && line.Click == 2)
+		{
+			LineDraw(line, hdc);
 		}
 
 		if (k == 1)
@@ -231,11 +203,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			Open(hdc, FileName);
 			FileCreated = Created;
 		}
-
 		EndPaint(hWnd, &ps);
-		
-		
 	}
 	}
+	return DefWindowProc(hWnd, msg, wParam, lParam);
+}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
