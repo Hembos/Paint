@@ -1,67 +1,21 @@
 #include "Paint.h"
 
-HDC memDC;
-HBITMAP memBM;
-HBITMAP hbOpen;
-
-void Save(HDC hdc, char* FileName)
+MyLINE LineDescription(MyLINE line, HWND hEditThicknessLine, PENSILCOLOR hEditColor)
 {
-	memDC = CreateCompatibleDC(hdc);
-	memBM = CreateCompatibleBitmap(hdc, 900, 600);
-	HGDIOBJ oldBMP = SelectObject(memDC, memBM);
-	BITMAP Bitmap;
-	GetObject(memBM, sizeof(Bitmap), (LPVOID)&Bitmap);
-	StretchBlt(memDC, 0, 0, 900, 600, hdc, 0, 70, Bitmap.bmWidth - 10, Bitmap.bmHeight - 115, SRCCOPY);
-
-
-	long Size = (Bitmap.bmWidth * ((Bitmap.bmHeight * 3 + 3) / 4 * 4) + 3) / 4 * 4;
-	BITMAPFILEHEADER bitfileh;
-	memset(&bitfileh, 0, sizeof(BITMAPFILEHEADER));
-	bitfileh.bfType = 0x4D42;
-	bitfileh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + Size;
-	bitfileh.bfReserved1 = 0;
-	bitfileh.bfReserved2 = 0;
-	bitfileh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-
-	BITMAPINFOHEADER bitinfoh;
-	memset(&bitinfoh, 0, sizeof(BITMAPINFOHEADER));
-	bitinfoh.biSize = sizeof(BITMAPINFOHEADER);
-	bitinfoh.biWidth = Bitmap.bmWidth;
-	bitinfoh.biHeight = Bitmap.bmHeight;
-	bitinfoh.biPlanes = 1;
-	bitinfoh.biBitCount = 24;
-
-	BYTE* mBits = malloc(Size);
-
-	GetDIBits(memDC, memBM, 0, Bitmap.bmHeight, mBits, (BITMAPINFO*)&bitinfoh, DIB_RGB_COLORS);
-
-	FILE* File;
-	File = fopen(FileName, "w");
-	fwrite(&bitfileh, sizeof(bitfileh), 1, File);
-	fwrite(&bitinfoh, sizeof(bitinfoh), 1, File);
-	fwrite(mBits, Size, 1, File);
-	fclose(File);
-
-	free(mBits);
-	SelectObject(memDC, oldBMP);
-	DeleteObject(memBM);
-	DeleteDC(memDC);
+	char Line[10];
+	char r[10], g[10], b[10];
+	GetWindowText(hEditThicknessLine, Line, 5);
+	GetWindowText(hEditColor.hEditR, r, 5);
+	GetWindowText(hEditColor.hEditG, g, 5);
+	GetWindowText(hEditColor.hEditB, b, 5);
+	line.Color.R = atoi(r);
+	line.Color.G = atoi(g);
+	line.Color.B = atoi(b);
+	line.Thickness = atoi(Line);
+	return line;
 }
 
-void Open(HDC hdc, char* FileName)
-{
-	memDC = CreateCompatibleDC(hdc);
-	memBM = CreateCompatibleBitmap(hdc, 900, 600);
-	HGDIOBJ oldBMP = SelectObject(memDC, memBM);
-	hbOpen = (HBITMAP)LoadImage(NULL, TEXT(FileName), IMAGE_BITMAP, 900, 530, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
-	SelectObject(memDC, hbOpen);
-	BitBlt(hdc, 0, 70, 900, 600, memDC, 0, 0, SRCCOPY);
-	SelectObject(memDC, oldBMP);
-	DeleteObject(memBM);
-	DeleteDC(memDC);
-}
-
-PENCIL PencilDraw(PENCIL Pencil, HWND hEditThicknessPencil, PENSILCOLOR hEditColor)
+PENCIL PencilDescription(PENCIL Pencil, HWND hEditThicknessPencil, PENSILCOLOR hEditColor)
 {
 	char Pen[10];
 	char r[10], g[10], b[10];
@@ -74,4 +28,42 @@ PENCIL PencilDraw(PENCIL Pencil, HWND hEditThicknessPencil, PENSILCOLOR hEditCol
 	Pencil.Color.B = atoi(b);
 	Pencil.Thickness = atoi(Pen);
 	return Pencil;
+}
+
+ERASER EraserDescription(ERASER Eraser, HWND hEditThicknessEraser)
+{
+	char Er[10];
+	GetWindowText(hEditThicknessEraser, Er, 5);
+	Eraser.Thickness = atoi(Er);
+	return Eraser;
+}
+
+void PencilDraw(PENCIL Pencil, HDC hdc)
+{
+	HPEN hPen;
+	hPen = CreatePen(PS_SOLID, Pencil.Thickness, RGB(Pencil.Color.R, Pencil.Color.G, Pencil.Color.B));
+	SelectObject(hdc, hPen);
+	MoveToEx(hdc, Pencil.OldPosition.x, Pencil.OldPosition.y, NULL);
+	LineTo(hdc, Pencil.Position.x, Pencil.Position.y);
+	DeleteObject(hPen);
+}
+
+void EraserDraw(ERASER Eraser, HDC hdc)
+{
+	HPEN hPen;
+	hPen = CreatePen(PS_SOLID, Eraser.Thickness, RGB(255, 255, 255));
+	SelectObject(hdc, hPen);
+	MoveToEx(hdc, Eraser.OldPosition.x, Eraser.OldPosition.y, NULL);
+	LineTo(hdc, Eraser.Position.x, Eraser.Position.y);
+	DeleteObject(hPen);
+}
+
+void LineDraw(MyLINE line, HDC hdc)
+{
+	HPEN hPen;
+	hPen = CreatePen(PS_SOLID, line.Thickness, RGB(line.Color.R, line.Color.G, line.Color.B));
+	SelectObject(hdc, hPen);
+	MoveToEx(hdc, line.StartPosition.x, line.StartPosition.y, NULL);
+	LineTo(hdc, line.EndPosition.x, line.EndPosition.y);
+	DeleteObject(hPen);
 }
