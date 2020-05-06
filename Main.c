@@ -17,7 +17,7 @@ PAINTSTRUCT ps;
 
 LRESULT CALLBACK WndProc(HWND, UINT, UINT, LONG);
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpszCmdParam, _In_ int nCmdShow)
+void CreateMainWindow(int nCmdShow)
 {
 	WNDCLASS wc;
 	wc.cbClsExtra = wc.cbWndExtra = 0;
@@ -37,6 +37,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	if (!hWnd) { return 0; }
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
+}
+
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpszCmdParam, _In_ int nCmdShow)
+{
+	CreateMainWindow(nCmdShow);
 
 	MSG msg;
 	while (GetMessage(&msg, 0, 0, 0))
